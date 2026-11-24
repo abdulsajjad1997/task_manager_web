@@ -12,11 +12,18 @@ import DashboardHeader from "@/components/tasks/DashboardHeader";
 import TaskModal from "@/components/tasks/TaskModal";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
+import AITaskGenerator from "@/components/ai/AITaskGenerator";
+import GeneratedTaskList from "@/components/ai/GeneratedTaskList";
+
 import { addTask, editTask } from "@/features/tasks/taskSlice";
+import { clearGeneratedPlan } from "@/features/ai/aiSlice";
 
 export default function DashboardPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAIGeneratorOpen, setIsAIGeneratorOpen] = useState(false);
+  const [isGeneratedListOpen, setIsGeneratedListOpen] = useState(false);
+
   const [selectedTask, setSelectedTask] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,7 +41,6 @@ export default function DashboardPage() {
   const isSubmitting = creating || updating;
 
   // Handle sidebar navigation
-
   const handleNavigation = (menu) => {
     setActiveMenu(menu);
 
@@ -121,12 +127,29 @@ export default function DashboardPage() {
     }
   };
 
-  // Close Modal
+  // Close Task Modal
   const handleCloseModal = () => {
     if (isSubmitting) return;
 
     setIsModalOpen(false);
     setSelectedTask(null);
+  };
+
+  // Open AI Generator
+  const handleOpenAIGenerator = () => {
+    setIsAIGeneratorOpen(true);
+  };
+
+  // Show generated tasks after successful generation
+  const handleGenerated = () => {
+    setIsAIGeneratorOpen(false);
+    setIsGeneratedListOpen(true);
+  };
+
+  // Close Generated Task List
+  const handleCloseGeneratedList = () => {
+    setIsGeneratedListOpen(false);
+    dispatch(clearGeneratedPlan());
   };
 
   return (
@@ -151,6 +174,15 @@ export default function DashboardPage() {
             {/* Dashboard Section */}
             <div>
               <DashboardHeader onAddTask={handleOpenCreateModal} />
+
+              <button
+                type="button"
+                onClick={handleOpenAIGenerator}
+                className="mb-6 flex items-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-purple-700"
+              >
+                <span>✦</span>
+                Generate Tasks with AI
+              </button>
 
               <TaskStats />
             </div>
@@ -180,6 +212,19 @@ export default function DashboardPage() {
             error={error}
             initialTask={selectedTask}
           />
+        )}
+
+        {/* AI Task Generator */}
+        {isAIGeneratorOpen && (
+          <AITaskGenerator
+            onClose={() => setIsAIGeneratorOpen(false)}
+            onGenerated={handleGenerated}
+          />
+        )}
+
+        {/* Generated Tasks Preview */}
+        {isGeneratedListOpen && (
+          <GeneratedTaskList onClose={handleCloseGeneratedList} />
         )}
       </div>
     </ProtectedRoute>
